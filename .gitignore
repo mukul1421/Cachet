@@ -1,0 +1,16 @@
+# Build output
+build/
+proxy
+*.o
+*.out
+ 
+# Editors and OS files
+.vscode/
+.idea/
+.DS_Store
+ 
+# Debug files
+*.log
+core
+vgcore.*
+
