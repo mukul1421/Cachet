@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 
 int main() {
 
@@ -14,6 +15,19 @@ int main() {
     }
 
     printf("TCP socket created successfully.\n");
+
+    struct sockaddr_in server_addr;
+
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(8080);
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+
+    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
+        perror("bind");
+        return 1;
+    }
+
+    printf("Socket bound successfully to port 8080.\n");
 
     return 0;
 }
