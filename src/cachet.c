@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <unistd.h>
 
 int main() {
 
@@ -72,6 +73,9 @@ int main() {
     }
 
     printf("Response sent to client.\n");
+
+    close(client_fd);
+    close(server_fd);
 
     return 0;
 }
