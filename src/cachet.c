@@ -29,5 +29,12 @@ int main() {
 
     printf("Socket bound successfully to port 8080.\n");
 
+    if (listen(server_fd, 10) == -1) {
+        perror("listen");
+        return 1;
+    }
+
+    printf("Server is listening on port 8080.\n");
+
     return 0;
 }
