@@ -36,5 +36,16 @@ int main() {
 
     printf("Server is listening on port 8080.\n");
 
+    int client_fd;
+
+    client_fd = accept(server_fd, NULL, NULL);
+
+    if (client_fd == -1) {
+        perror("accept");
+        return 1;
+    }
+
+    printf("Client connected successfully.\n");
+
     return 0;
 }
