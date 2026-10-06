@@ -61,5 +61,17 @@ int main() {
 
     printf("Received: %s\n", buffer);
 
+
+    char response[] = "Hello from Cachet!\n";
+
+    int bytes_sent = send(client_fd, response, sizeof(response) - 1, 0);
+
+    if (bytes_sent == -1) {
+        perror("send");
+        return 1;
+    }
+
+    printf("Response sent to client.\n");
+
     return 0;
 }
