@@ -49,7 +49,7 @@ int main() {
     printf("Client connected successfully.\n");
 
 
-    char buffer[1024];
+    char buffer[4096];
 
     int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
 
@@ -60,7 +60,7 @@ int main() {
 
     buffer[bytes_received] = '\0';
 
-    printf("Received: %s\n", buffer);
+    printf("Received request:\n%s\n", buffer);
 
 
     char response[] = "Hello from Cachet!\n";
