@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
+#include "../include/http.h"
 
 int main() {
 
@@ -81,6 +82,8 @@ int main() {
     }
 
     printf("Received HTTP request:\n%s\n", buffer);
+    
+    parse_request(buffer);
 
 
     char response[] = "Hello from Cachet!\n";
