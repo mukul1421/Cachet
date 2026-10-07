@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "../include/http.h"
+#include "../include/remote.h"
 
 int main() {
 
@@ -82,8 +83,10 @@ int main() {
     }
 
     printf("Received HTTP request:\n%s\n", buffer);
+
+    char host[256];
     
-    parse_request(buffer);
+    parse_request(buffer,host);
 
 
     char response[] = "Hello from Cachet!\n";
@@ -99,6 +102,14 @@ int main() {
 
     close(client_fd);
     close(server_fd);
+
+
+   int remote_fd = connect_remote_server(host);
+
+    if (remote_fd != -1) {
+        printf("Connected to remote server successfully.\n");
+        close(remote_fd);
+    }
 
     return 0;
 }
