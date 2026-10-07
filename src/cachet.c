@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <string.h>
 
 int main() {
 
@@ -50,17 +51,36 @@ int main() {
 
 
     char buffer[4096];
+    int total_received = 0;
 
-    int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+    while (total_received < sizeof(buffer) - 1) {
 
-    if (bytes_received == -1) {
-        perror("recv");
-        return 1;
+        int bytes_received = recv(
+            client_fd,
+            buffer + total_received,
+            sizeof(buffer) - 1 - total_received,
+            0
+        );
+
+        if (bytes_received == -1) {
+            perror("recv");
+            return 1;
+        }
+
+        if (bytes_received == 0) {
+            break;
+        }
+
+        total_received += bytes_received;
+
+        buffer[total_received] = '\0';
+
+        if (strstr(buffer, "\r\n\r\n") != NULL) {
+            break;
+        }
     }
 
-    buffer[bytes_received] = '\0';
-
-    printf("Received request:\n%s\n", buffer);
+    printf("Received HTTP request:\n%s\n", buffer);
 
 
     char response[] = "Hello from Cachet!\n";
