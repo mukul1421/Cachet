@@ -88,28 +88,49 @@ int main() {
     
     parse_request(buffer,host);
 
-
-    char response[] = "Hello from Cachet!\n";
-
-    int bytes_sent = send(client_fd, response, sizeof(response) - 1, 0);
-
-    if (bytes_sent == -1) {
-        perror("send");
-        return 1;
-    }
-
-    printf("Response sent to client.\n");
-
-    close(client_fd);
-    close(server_fd);
-
-
-   int remote_fd = connect_remote_server(host);
+    int remote_fd = connect_remote_server(host);
 
     if (remote_fd != -1) {
-        printf("Connected to remote server successfully.\n");
+    
+        int bytes_sent = send_request_to_remote(remote_fd, buffer);
+    
+        if (bytes_sent != -1) {
+            printf("Request forwarded to remote server.\n");
+        }
+    
+        char response[8192];
+    
+        int response_size = receive_remote_response(
+            remote_fd,
+            response,
+            sizeof(response)
+        );
+    
+        if (response_size != -1) {
+        
+            printf("Response received from remote server.\n");
+            printf("%s\n", response);
+        
+            int client_bytes_sent = send(
+                client_fd,
+                response,
+                response_size,
+                0
+            );
+        
+            if (client_bytes_sent == -1) {
+                perror("send");
+                return 1;
+            }
+        
+            printf("Response sent to client.\n");
+        }
+    
         close(remote_fd);
     }
-
+    
+    close(client_fd);
+    close(server_fd);
+    
     return 0;
 }
