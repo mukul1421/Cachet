@@ -4,8 +4,10 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
+
 #include "../include/http.h"
 #include "../include/remote.h"
+#include "../include/cache.h"
 
 int main() {
 
@@ -40,17 +42,18 @@ int main() {
 
     printf("Server is listening on port 8080.\n");
 
-    int client_fd;
+    while (1) {
 
-    client_fd = accept(server_fd, NULL, NULL);
+        int client_fd;
 
-    if (client_fd == -1) {
-        perror("accept");
-        return 1;
-    }
+        client_fd = accept(server_fd, NULL, NULL);
 
-    printf("Client connected successfully.\n");
+        if (client_fd == -1) {
+            perror("accept");
+            continue;
+        }
 
+        printf("Client connected successfully.\n");
 
     char buffer[4096];
     int total_received = 0;
@@ -85,8 +88,41 @@ int main() {
     printf("Received HTTP request:\n%s\n", buffer);
 
     char host[256];
+    char path[256];
     
-    parse_request(buffer,host);
+    parse_request(buffer,host,path);
+
+    char key[512];
+
+    snprintf(key, sizeof(key), "%s%s", host, path);
+
+    printf("Cache key: %s\n", key);
+
+    CacheEntry *cached_entry = find_in_cache(key);
+
+   if (cached_entry != NULL) {
+
+    printf("Cache HIT.\n");
+
+    int client_bytes_sent = send(
+        client_fd,
+        cached_entry->response,
+        cached_entry->response_size,
+        0
+    );
+
+    if (client_bytes_sent == -1) {
+        perror("send");
+    } else {
+        printf("Cached response sent to client.\n");
+    }
+
+    close(client_fd);
+    continue;
+    
+    }else {
+        printf("Cache MISS.\n");
+    }
 
     int remote_fd = connect_remote_server(host);
 
@@ -110,6 +146,10 @@ int main() {
         
             printf("Response received from remote server.\n");
             printf("%s\n", response);
+
+            add_to_cache(key, response, response_size);
+
+            printf("Response added to cache.\n");
         
             int client_bytes_sent = send(
                 client_fd,
@@ -130,7 +170,8 @@ int main() {
     }
     
     close(client_fd);
-    close(server_fd);
+}
+
     
     return 0;
 }
