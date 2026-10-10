@@ -59,32 +59,41 @@ void *handle_client(void *arg) {
 
     printf("Cache key: %s\n", key);
 
-    CacheEntry *cached_entry = find_in_cache(key);
-
-   if (cached_entry != NULL) {
-
-    printf("Cache HIT.\n");
-
-    int client_bytes_sent = send(
-        client_fd,
-        cached_entry->response,
-        cached_entry->response_size,
-        0
+    char *cached_response = NULL;
+    int cached_response_size = 0;
+    
+    int cache_hit = find_in_cache(
+        key,
+        &cached_response,
+        &cached_response_size
     );
-
-    if (client_bytes_sent == -1) {
-        perror("send");
+    
+    if (cache_hit) {
+    
+        printf("Cache HIT.\n");
+    
+        int client_bytes_sent = send(
+            client_fd,
+            cached_response,
+            cached_response_size,
+            0
+        );
+    
+        if (client_bytes_sent == -1) {
+            perror("send");
+            free(cached_response);
+            close(client_fd);
+            return NULL;
+        }
+    
+        printf("Cached response sent to client.\n");
+    
+        free(cached_response);
         close(client_fd);
         return NULL;
-    } 
-    else {
-        printf("Cached response sent to client.\n");
-    }
-
-    close(client_fd);
-    return NULL;
     
-    }else {
+    } else {
+    
         printf("Cache MISS.\n");
     }
 
@@ -174,40 +183,40 @@ int main() {
 
       
         int *client_socket = malloc(sizeof(int));
-        
+
         if (client_socket == NULL) {
             perror("malloc");
             continue;
         }
-    
+
         *client_socket = accept(server_fd, NULL, NULL);
-    
+
         if (*client_socket == -1) {
             perror("accept");
             free(client_socket);
             continue;
         }
-    
+
         printf("Client connected successfully.\n");
-    
+
         pthread_t thread;
-    
+
         int result = pthread_create(
             &thread,
             NULL,
             handle_client,
             client_socket
         );
-    
+
         if (result != 0) {
             perror("pthread_create");
             close(*client_socket);
             free(client_socket);
             continue;
         }
-    
+
         pthread_detach(thread);
-    
+
     }
 
     
