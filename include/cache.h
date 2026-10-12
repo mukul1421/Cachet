@@ -5,6 +5,8 @@ typedef struct {
     char *key;
     char *response;
     int response_size;
+    unsigned long last_used;
+
 } CacheEntry;
 
 int find_in_cache(const char *key, char **response, int *response_size);
