@@ -15,9 +15,9 @@ pthread_mutex_t cache_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int find_in_cache(const char *key, char **response, int *response_size) {
 
-        printf("Trying to lock cache...\n");
+        printf("[Cache] Trying to lock cache...\n");
         pthread_mutex_lock(&cache_mutex);
-        printf("Cache lock acquired.\n");
+        printf("[Cache] Cache lock acquired.\n");
 
     for (int i = 0; i < CACHE_SIZE; i++) {
 
@@ -40,13 +40,17 @@ int find_in_cache(const char *key, char **response, int *response_size) {
 
             *response_size = cache[i].response_size;
 
-            pthread_mutex_unlock(&cache_mutex);
+            printf("[Cache] Cache HIT.\n");
+            printf("[Cache] Releasing cache lock...\n");
 
+            pthread_mutex_unlock(&cache_mutex);
             return 1;
         }
     }
 
-    printf("Releasing cache lock.\n");
+    printf("[Cache] Cache MISS.\n");
+
+    printf("[Cache] Releasing cache lock.\n");
     pthread_mutex_unlock(&cache_mutex);
 
     return 0;
@@ -55,7 +59,9 @@ int find_in_cache(const char *key, char **response, int *response_size) {
 
 void add_to_cache(const char *key, const char *response, int response_size) {
 
+    printf("[Cache] Trying to lock cache for insertion...\n");
     pthread_mutex_lock(&cache_mutex);
+    printf("[Cache] Cache lock acquired.\n");
 
     for (int i = 0; i < CACHE_SIZE; i++) {
 
@@ -82,6 +88,9 @@ void add_to_cache(const char *key, const char *response, int response_size) {
 
             cache[i].response_size = response_size;
             cache[i].last_used = ++access_counter;
+
+            printf("[Cache] Response stored in cache.\n");
+            printf("[Cache] Releasing cache lock...\n");
             pthread_mutex_unlock(&cache_mutex);
 
             return;
@@ -97,7 +106,7 @@ void add_to_cache(const char *key, const char *response, int response_size) {
             lru_index = i;
         }
     }
-    printf("Evicting cache entry: %s\n", cache[lru_index].key);
+    printf("[Cache]Evicting cache entry: %s\n", cache[lru_index].key);
 
     free(cache[lru_index].key);
     free(cache[lru_index].response);
@@ -108,7 +117,7 @@ void add_to_cache(const char *key, const char *response, int response_size) {
 
     if (cache[lru_index].key == NULL ||
         cache[lru_index].response == NULL) {
-        printf("Memory allocation failed.\n");
+        printf("[Cache] Memory allocation failed.\n");
         pthread_mutex_unlock(&cache_mutex);
         return;
     }

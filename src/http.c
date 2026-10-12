@@ -2,12 +2,10 @@
 #include <string.h>
 #include "../include/http.h"
 
-void parse_request(const char *request, char *host) {
+void parse_request(const char *request, char *host, char *path){
 
     char method[16];
-    char path[256];
     
-
     sscanf(request, "%15s %255s", method, path);
 
     char *host_start = strstr(request, "Host:");
@@ -18,7 +16,6 @@ void parse_request(const char *request, char *host) {
         host[0] = '\0';
     }
 
-    printf("Method: %s\n", method);
-    printf("Path: %s\n", path);
-    printf("Host: %s\n", host);
+    printf("[HTTP] %s %s\n", method, path);
+    printf("[HTTP] Host: %s\n", host);
 }

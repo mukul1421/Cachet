@@ -16,8 +16,10 @@ void *handle_client(void *arg) {
     int client_fd = *(int *)arg;
     free(arg);
 
+    printf("\n\n========== NEW CLIENT REQUEST ==========\n\n");
+
     char buffer[4096];
-    int total_received = 0;
+    size_t total_received = 0;
 
     while (total_received < sizeof(buffer) - 1) {
 
@@ -46,8 +48,6 @@ void *handle_client(void *arg) {
         }
     }
 
-    printf("Received HTTP request:\n%s\n", buffer);
-
     char host[256];
     char path[256];
     
@@ -57,7 +57,7 @@ void *handle_client(void *arg) {
 
     snprintf(key, sizeof(key), "%s%s", host, path);
 
-    printf("Cache key: %s\n", key);
+    printf("[Cache] Cache key: %s\n", key);
 
     char *cached_response = NULL;
     int cached_response_size = 0;
@@ -69,8 +69,6 @@ void *handle_client(void *arg) {
     );
     
     if (cache_hit) {
-    
-        printf("Cache HIT.\n");
     
         int client_bytes_sent = send(
             client_fd,
@@ -86,17 +84,16 @@ void *handle_client(void *arg) {
             return NULL;
         }
     
-        printf("Cached response sent to client.\n");
+        printf("[Client] Cached response sent to client.\n");
     
         free(cached_response);
+
+        printf("\n========== REQUEST COMPLETE ==========\n\n");
+
         close(client_fd);
         return NULL;
     
-    } else {
-    
-        printf("Cache MISS.\n");
-    }
-
+    } 
     int remote_fd = connect_remote_server(host);
 
     if (remote_fd != -1) {
@@ -104,7 +101,7 @@ void *handle_client(void *arg) {
         int bytes_sent = send_request_to_remote(remote_fd, buffer);
     
         if (bytes_sent != -1) {
-            printf("Request forwarded to remote server.\n");
+            printf("[Remote] Request forwarded to remote server.\n");
         }
     
         char response[8192];
@@ -117,12 +114,11 @@ void *handle_client(void *arg) {
     
         if (response_size != -1) {
         
-            printf("Response received from remote server.\n");
-            printf("%s\n", response);
+            printf("[Remote] Response received from remote server.\n");
 
             add_to_cache(key, response, response_size);
 
-            printf("Response added to cache.\n");
+            printf("[Cache] Response added to cache.\n");
         
             int client_bytes_sent = send(
                 client_fd,
@@ -137,11 +133,13 @@ void *handle_client(void *arg) {
                 return NULL;
             }
         
-            printf("Response sent to client.\n");
+            printf("[Client] Response sent to client.\n");
         }
     
         close(remote_fd);
     }
+
+    printf("\n========== REQUEST COMPLETE ==========\n\n");
     close(client_fd);
     return NULL;
 }
@@ -157,7 +155,7 @@ int main() {
         return 1;
     }
 
-    printf("TCP socket created successfully.\n");
+    printf("[Server] TCP socket created.\n");
 
     struct sockaddr_in server_addr;
 
@@ -170,14 +168,14 @@ int main() {
         return 1;
     }
 
-    printf("Socket bound successfully to port 8080.\n");
+    printf("[Server] Bound to port 8080.\n");
 
     if (listen(server_fd, 10) == -1) {
         perror("listen");
         return 1;
     }
 
-    printf("Server is listening on port 8080.\n");
+    printf("[Server] Listening on port 8080.\n");
 
     while (1) {
 
@@ -197,7 +195,7 @@ int main() {
             continue;
         }
 
-        printf("Client connected successfully.\n");
+        printf("\n[Client] Connected.\n");
 
         pthread_t thread;
 

@@ -1,27 +1,24 @@
-CC      = gcc
-CFLAGS  = -std=c11 -Wall -Wextra -g -pthread -Iinclude
-LDFLAGS = -pthread
-SRC     = $(wildcard src/*.c)
-OBJ     = $(SRC:src/%.c=build/%.o)
-TARGET  = proxy
+CC = gcc
+CFLAGS = -Wall -Wextra -pthread -Iinclude
+
+TARGET = cachet
+
+SRC = src/cachet.c \
+      src/http.c \
+      src/remote.c \
+      src/cache.c
 
 all: $(TARGET)
 
-$(TARGET): $(OBJ)
-	$(CC) $(OBJ) -o $@ $(LDFLAGS)
+$(TARGET): $(SRC)
+	$(CC) $(CFLAGS) $(SRC) -o $(TARGET)
 
-build/%.o: src/%.c | build
-	$(CC) $(CFLAGS) -c $< -o $@
-
-build:
-	mkdir -p build
-
-# Build with ThreadSanitizer to find data races
-tsan: CFLAGS += -fsanitize=thread
-tsan: LDFLAGS += -fsanitize=thread
-tsan: clean $(TARGET)
+run: $(TARGET)
+	./$(TARGET)
 
 clean:
-	rm -rf build $(TARGET)
+	rm -f $(TARGET)
 
-.PHONY: all clean tsan
+rebuild: clean all
+
+.PHONY: all run clean rebuild
